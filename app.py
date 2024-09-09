@@ -15,7 +15,7 @@ def create_usuario():
     name = data.get('name')
     email = data.get('email')
     password = data.get('password')
-    is_active = data.get('is_active', True)  # Assume `True` se não fornecido
+    is_active = data.get('is_active', True)  
     cpf_cnpj = data.get('cpf_cnpj')
 
     if not name or not email or not password or not cpf_cnpj:
@@ -102,6 +102,78 @@ def update_usuario_status(user_id):
         db.commit()
 
     return jsonify({"message": "User status updated successfully"})
+
+@app.route('/produto', methods=['POST'])
+def create_produto():
+    data = request.json
+    nome = data.get('nome')
+    quantidade = data.get('quantidade')
+    preco = data.get('preco')
+
+    if not nome or quantidade is None or preco is None:
+        return jsonify({"error": "Nome, quantidade, and preco are required"}), 400
+
+    if not isinstance(quantidade, int) or quantidade < 0:
+        return jsonify({"error": "Quantidade must be a non-negative integer"}), 400
+
+    if not isinstance(preco, (int, float)) or preco < 0:
+        return jsonify({"error": "Preco must be a non-negative number"}), 400
+
+    try:
+        with get_db() as db:
+            db.execute(
+                'INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)',
+                (nome, quantidade, preco)
+            )
+            db.commit()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"message": "Produto created successfully"}), 201
+
+
+@app.route('/produto/<int:produto_id>', methods=['PUT'])
+def update_produto(produto_id):
+    data = request.json
+    nome = data.get('nome')
+    quantidade = data.get('quantidade')
+    preco = data.get('preco')
+
+    if nome is None and quantidade is None and preco is None:
+        return jsonify({"error": "At least one field (nome, quantidade, preco) must be provided"}), 400
+
+    if quantidade is not None and (not isinstance(quantidade, int) or quantidade < 0):
+        return jsonify({"error": "Quantidade must be a non-negative integer"}), 400
+
+    if preco is not None and (not isinstance(preco, (int, float)) or preco < 0):
+        return jsonify({"error": "Preco must be a non-negative number"}), 400
+
+    with get_db() as db:
+        cursor = db.execute('SELECT * FROM produtos WHERE id = ?', (produto_id,))
+        produto = cursor.fetchone()
+
+        if produto is None:
+            return jsonify({"error": "Produto not found"}), 404
+
+        # Atualizar campos se fornecidos
+        if nome is not None:
+            db.execute('UPDATE produtos SET nome = ? WHERE id = ?', (nome, produto_id))
+        if quantidade is not None:
+            db.execute('UPDATE produtos SET quantidade = ? WHERE id = ?', (quantidade, produto_id))
+        if preco is not None:
+            db.execute('UPDATE produtos SET preco = ? WHERE id = ?', (preco, produto_id))
+
+        db.commit()
+
+    return jsonify({"message": "Produto updated successfully"})
+
+@app.route('/produto', methods=['GET'])
+def list_produtos():
+    with get_db() as db:
+        cursor = db.execute('SELECT * FROM produtos')
+        produtos = cursor.fetchall()
+        return jsonify([dict(produto) for produto in produtos])
+
 
 if __name__ == '__main__':
     app.run(debug=True)

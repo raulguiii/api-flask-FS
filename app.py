@@ -9,6 +9,14 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+@app.route('/usuarios', methods=['GET'])
+def list_usuarios():
+    with get_db() as db:
+        cursor = db.execute('SELECT * FROM usuarios')
+        usuarios = cursor.fetchall()
+        return jsonify([dict(usuario) for usuario in usuarios])
+
+
 @app.route('/usuario', methods=['POST'])
 def create_usuario():
     data = request.json

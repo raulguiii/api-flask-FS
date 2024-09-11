@@ -19,7 +19,7 @@ curl -X PUT http://127.0.0.1:5000/usuario/1/status -H "Content-Type: application
 
 
 SALVAR PRODUTO
-curl -X POST http://localhost:5000/produto -H "Content-Type: application/json" -d '{"nome": "Produto1", "quantidade": 10, "preco": 19.99}'
+curl -X POST http://127.0.0.1:5000/produto -H "Content-Type: application/json" -d "{\"nome\": \"Produto1\", \"quantidade\": 10, \"preco\": 19.99}"
 
 
 ATUALIZAR PRODUTO 

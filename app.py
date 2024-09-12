@@ -183,5 +183,37 @@ def list_produtos():
         return jsonify([dict(produto) for produto in produtos])
 
 
+@app.route('/usuario/<int:user_id>', methods=['DELETE'])
+def delete_usuario(user_id):
+    try:
+        with get_db() as db:
+            cursor = db.execute('SELECT * FROM usuarios WHERE id = ?', (user_id,))
+            user = cursor.fetchone()
+
+            if user is None:
+                return jsonify({"error": "User not found"}), 404
+
+            db.execute('DELETE FROM usuarios WHERE id = ?', (user_id,))
+            db.commit()
+            
+            return jsonify({"message": "User deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/produto/<int:produto_id>', methods=['GET'])
+def get_produto(produto_id):
+    with get_db() as db:
+        cursor = db.execute('SELECT * FROM produtos WHERE id = ?', (produto_id,))
+        produto = cursor.fetchone()
+
+        if produto is None:
+            return jsonify({"error": "Produto not found"}), 404
+
+        return jsonify(dict(produto))
+
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
